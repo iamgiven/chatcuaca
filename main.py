@@ -86,7 +86,7 @@ def get_ai_response(prompt, client_func):
         return "Maaf, saya sedang mengalami kendala teknis. Silakan coba lagi nanti."
 
 # Streamlit UI
-st.title("🌤️ Weather Chatbot")
+st.title("🌤️ WeatherChat")
 
 # Initialize session state for chat history
 if 'chat_history' not in st.session_state:
