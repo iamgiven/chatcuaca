@@ -188,5 +188,4 @@ with st.sidebar:
     Anda dapat menanyakan tentang:
     - Cuaca saat ini: "Bagaimana cuaca di Jakarta hari ini?"
     - Prakiraan cuaca: "Seperti apa cuaca di Tokyo besok?"
-    - Atau sekedar menyapa: "Halo"
     """)
