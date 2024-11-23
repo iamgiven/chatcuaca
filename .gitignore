@@ -1,0 +1,9 @@
+.streamlit/
+*.env
+venv/
+__pycache__/
+*.pyc
+.repoignore
+.vscode/
+env-master.txt
+secrets.toml

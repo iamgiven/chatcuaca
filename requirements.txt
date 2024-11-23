@@ -1,0 +1,8 @@
+streamlit
+requests
+groq
+google-generativeai
+openai
+python-dotenv
+python-dateutil
+pytz
