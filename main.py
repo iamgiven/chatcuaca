@@ -251,14 +251,20 @@ with st.sidebar:
     ### Tentang Asisten Cuaca
     Asisten ini dapat memberikan informasi cuaca dan bercakap-cakap umum dengan fitur:
     
-    ✨ Prakiraan cuaca hingga 5 hari ke depan
-    🎯 Informasi detail per 3 jam
-    🌍 Mendukung bahasa Indonesia
-    🤖 Analisis dari 3 model AI berbeda
-    💬 Dapat melakukan percakapan umum
+    ✨  Prakiraan cuaca hingga 5 hari ke depan
+
+    🎯  Informasi detail per 3 jam
+
+    🌍  Mendukung bahasa Indonesia
+
+    🤖  Analisis dari 3 model AI berbeda
+        - Gemma 9B (via Groq)
+        - Gemini 1.5 Pro (via Google AI)
+        - Claude 3 Haiku (via OpenRouter)
+
+    💬  Dapat melakukan percakapan umum
     
     Contoh interaksi:
-    - "Halo, apa kabar?"
     - "Bagaimana cuaca di Jakarta hari ini?"
     - "Prakiraan cuaca Yogyakarta besok"
     - "Cuaca Surabaya 3 hari ke depan"
