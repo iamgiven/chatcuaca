@@ -54,6 +54,8 @@ def extract_city_from_prompt(prompt):
         Example 1: "What's the weather like in New York tomorrow?" → "new%20york"
         Example 2: "Bagaimana cuaca di Yogyakarta?" → "yogyakarta"
         Example 3: "berikan cuaca untuk kota sleman, pada tanggal 20 november 2024 jam 20:00" → "sleman"
+        Translate any city name in english standard
+        Example 4: "Seperti apa cuaca di Swedia besok malam?" → "Sweden"
         """
         
         response = model.generate_content(analysis_prompt)
@@ -255,7 +257,7 @@ with st.sidebar:
 
     🎯  Informasi detail per 3 jam
 
-    🌍  Mendukung bahasa Indonesia
+    🌍  Menggunakan bahasa Indonesia
 
     🤖  Analisis dari 3 model AI berbeda:
     - Mistral Large (via Mistral)
