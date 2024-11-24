@@ -51,7 +51,7 @@ def extract_city_from_prompt(prompt):
         From this weather query: "{prompt}"
         Extract only the city name and return it as a single word.
         Do not include any other text or punctuation.
-        Example 1: "What's the weather like in New York tomorrow?" → "newyork"
+        Example 1: "What's the weather like in New York tomorrow?" → "new%20york"
         Example 2: "Bagaimana cuaca di Yogyakarta?" → "yogyakarta"
         Example 3: "berikan cuaca untuk kota sleman, pada tanggal 20 november 2024 jam 20:00" → "sleman"
         """
