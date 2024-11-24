@@ -4,10 +4,11 @@ from datetime import datetime, timedelta
 import groq
 import google.generativeai as genai
 from openai import OpenAI
+from mistralai import Mistral
 import json
 
 # Check for required API keys
-required_keys = ['OPENWEATHER_API_KEY', 'GROQ_API_KEY', 'GOOGLE_API_KEY', 'OPENROUTER_API_KEY']
+required_keys = ['MISTRAL_API_KEY', 'GROQ_API_KEY', 'GOOGLE_API_KEY']
 for key in required_keys:
     if key not in st.secrets:
         st.error(f'Missing {key} in secrets.toml')
@@ -15,15 +16,32 @@ for key in required_keys:
 
 # Initialize clients with API keys from secrets
 try:
-    groq_client = groq.Client(api_key=st.secrets["GROQ_API_KEY"])
+    mistral_client = Mistral(api_key=st.secrets["MISTRAL_API_KEY"])
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-    openrouter_client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=st.secrets["OPENROUTER_API_KEY"]
-    )
+    groq_client = groq.Client(api_key=st.secrets["GROQ_API_KEY"])
 except Exception as e:
     st.error(f"Error initializing API clients: {str(e)}")
     st.stop()
+
+def is_weather_query(prompt):
+    """Use Gemini to determine if the prompt is asking about weather"""
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        analysis_prompt = f"""
+        Analyze if this query is asking about weather: "{prompt}"
+        Return only "yes" or "no".
+        Examples:
+        "What's the weather like in New York?" → "yes"
+        "Hi" → "no"
+        "How are you?" → "no"
+        "Will it rain in Jakarta tomorrow?" → "yes"
+        """
+        
+        response = model.generate_content(analysis_prompt)
+        return response.text.strip().lower() == "yes"
+    except Exception as e:
+        st.error("Error analyzing query type. Treating as general conversation.")
+        return False
 
 def extract_city_from_prompt(prompt):
     """Use Gemini to extract city from the prompt"""
@@ -105,27 +123,42 @@ def format_weather_data(weather_data, prompt):
     except Exception as e:
         return f"Error dalam memformat data cuaca: {str(e)}"
 
-def get_model_response(client, model_type, prompt, weather_data):
+def get_model_response(client, model_type, prompt, weather_data=None):
     """Get response from specified model with error handling"""
     try:
-        if model_type == "gemma":
-            completion = groq_client.chat.completions.create(
-                model="gemma2-9b-it",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.7,
-                max_tokens=500
+        # For weather queries, use the RAG prompt
+        if weather_data:
+            weather_info = format_weather_data(weather_data, prompt)
+            rag_prompt = f"""Berdasarkan data cuaca berikut, berikan respons yang natural dan informatif untuk pertanyaan pengguna: "{prompt}"
+
+{weather_info}
+
+Pahami dengan teliti apa yang ditanyakan user. Jika tanggal yang ditanyakan tidak ada di dalam data, sampaikan saja tidak tahu. Berikan analisis singkat tentang kondisi cuaca dan saran yang relevan berdasarkan data tersebut. Gunakan bahasa yang ramah dan mudah dipahami."""
+            final_prompt = rag_prompt
+        else:
+            # For general conversation, create a conversational prompt
+            final_prompt = f"""Berikan respons yang ramah dan natural untuk pesan pengguna: "{prompt}"
+
+Gunakan bahasa Indonesia yang sopan dan informal. Anda adalah asisten AI yang dapat memberikan informasi cuaca, tetapi juga bisa bercakap-cakap tentang topik umum."""
+        
+        if model_type == "mistral":
+            completion = mistral_client.chat.complete(
+                model="mistral-large-latest",
+                messages=[{"role": "user", "content": final_prompt}]
             )
             return completion.choices[0].message.content
         
         elif model_type == "gemini":
             model = genai.GenerativeModel('gemini-1.5-flash')
-            response = model.generate_content(prompt)
+            response = model.generate_content(final_prompt)
             return response.text
         
-        elif model_type == "claude":
-            completion = openrouter_client.chat.completions.create(
-                model="anthropic/claude-3-haiku",
-                messages=[{"role": "user", "content": prompt}]
+        elif model_type == "llama":
+            completion = groq_client.chat.completions.create(
+                model="llama-3.1-70b-versatile",
+                messages=[{"role": "user", "content": final_prompt}],
+                temperature=0.7,
+                max_tokens=500
             )
             return completion.choices[0].message.content
             
@@ -133,71 +166,77 @@ def get_model_response(client, model_type, prompt, weather_data):
         return f"Maaf, terjadi kesalahan dalam mendapatkan respons: {str(e)}"
 
 # Streamlit UI
-st.set_page_config(page_title="Asisten Cuaca Indonesia", page_icon="🌤️")
+st.set_page_config(page_title="WeatherChat", page_icon="🌤️")
 
-st.title("🌤️ Asisten Cuaca Indonesia")
+# Custom CSS to style the weather data container
+st.markdown("""
+    <style>
+    .stCode {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+st.title("🌤️ WeatherChat")
 
 # Initialize session state for chat history
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 
 # User input
-user_input = st.chat_input("Tanyakan tentang cuaca di kota manapun (contoh: 'Bagaimana cuaca di Jakarta besok?')")
+user_input = st.chat_input("Tanyakan tentang cuaca atau mulai percakapan umum")
 
 if user_input:
-    # Extract city from prompt
+    # Check if it's a weather query
     with st.spinner("Memahami pertanyaan Anda..."):
+        is_weather = is_weather_query(user_input)
+    
+    weather_data = None
+    if is_weather:
+        # Extract city and get weather data for weather queries
         city = extract_city_from_prompt(user_input)
-        if not city:
-            st.stop()
-    
-    # Get weather data
-    with st.spinner(f"Mengambil data cuaca untuk {city}..."):
-        weather_data = get_weather_data(city)
-        if not weather_data:
-            st.error(f"Tidak dapat mengambil data cuaca untuk {city}. Mohon periksa nama kota dan coba lagi.")
-            st.stop()
-        
-        weather_info = format_weather_data(weather_data, user_input)
-    
-    # Construct prompt with RAG
-    rag_prompt = f"""Berdasarkan data cuaca berikut, berikan respons yang natural dan informatif untuk pertanyaan pengguna: "{user_input}"
-
-{weather_info}
-
-Berikan analisis singkat tentang kondisi cuaca dan saran yang relevan berdasarkan data tersebut. Gunakan bahasa yang ramah dan mudah dipahami. IMPORTANT!! -> Jika tanggal yang ditanyakan tidak tersedia di dalam data, sampaikan saja tidak tahu. Jika ada, ikuti instruksi sebelumnya."""
+        if city:
+            with st.spinner(f"Mengambil data cuaca untuk {city}..."):
+                weather_data = get_weather_data(city)
+                if not weather_data:
+                    st.error(f"Tidak dapat mengambil data cuaca untuk {city}. Mohon periksa nama kota dan coba lagi.")
+                    st.stop()
 
     # Get responses from all models
-    with st.spinner("Menganalisis data cuaca..."):
+    with st.spinner("Menganalisis..."):
         responses = {}
         
         for model_type, display_name in [
-            ("gemma", "Gemma 2 9B"),
+            ("mistral", "Mistral Large Latest"),
             ("gemini", "Gemini 1.5 Flash"),
-            ("claude", "Claude 3 Haiku")
+            ("llama", "Llama 3.1 70B")
         ]:
             responses[display_name] = get_model_response(
-                None, model_type, rag_prompt, weather_data
+                None, model_type, user_input, weather_data
             )
 
     # Store in chat history
-    st.session_state.chat_history.append({
+    chat_entry = {
         "user_input": user_input,
-        "weather_data": weather_info,
         "responses": responses
-    })
+    }
+    if weather_data:
+        chat_entry["weather_data"] = format_weather_data(weather_data, user_input)
+    st.session_state.chat_history.append(chat_entry)
 
 # Display chat history
 for chat in st.session_state.chat_history:
     # User message
     st.chat_message("user").write(chat["user_input"])
     
-    # Weather data
-    with st.expander("Data Cuaca Lengkap"):
-        st.code(chat["weather_data"])
+    # Weather data (if available)
+    if "weather_data" in chat:
+        with st.expander("Data Cuaca Lengkap"):
+            st.code(chat["weather_data"])
     
     # Model responses in tabs
-    tabs = st.tabs(["Gemma 2 9B", "Gemini 1.5 Flash", "Claude 3 Haiku"])
+    tabs = st.tabs(["Mistral Large Latest", "Gemini 1.5 Flash", "Llama 3.1 70B"])
     for tab, (model, response) in zip(tabs, chat["responses"].items()):
         with tab:
             st.markdown(response)
@@ -206,14 +245,16 @@ for chat in st.session_state.chat_history:
 with st.sidebar:
     st.markdown("""
     ### Tentang Asisten Cuaca
-    Asisten ini memberikan informasi cuaca untuk kota-kota di Indonesia dan dunia dengan fitur:
+    Asisten ini dapat memberikan informasi cuaca dan bercakap-cakap umum dengan fitur:
     
     ✨ Prakiraan cuaca hingga 5 hari ke depan
     🎯 Informasi detail per 3 jam
     🌍 Mendukung bahasa Indonesia
     🤖 Analisis dari 3 model AI berbeda
+    💬 Dapat melakukan percakapan umum
     
-    Contoh pertanyaan:
+    Contoh interaksi:
+    - "Halo, apa kabar?"
     - "Bagaimana cuaca di Jakarta hari ini?"
     - "Prakiraan cuaca Yogyakarta besok"
     - "Cuaca Surabaya 3 hari ke depan"

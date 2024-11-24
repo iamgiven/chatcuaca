@@ -6,3 +6,4 @@ openai
 python-dotenv
 python-dateutil
 pytz
+mistralai
