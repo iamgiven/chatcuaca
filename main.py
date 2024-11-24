@@ -166,7 +166,11 @@ Gunakan bahasa Indonesia yang sopan dan informal. Anda adalah asisten AI yang da
         return f"Maaf, terjadi kesalahan dalam mendapatkan respons: {str(e)}"
 
 # Streamlit UI
-st.set_page_config(page_title="WeatherChat", page_icon="🌤️")
+st.set_page_config(
+    page_title="WeatherChat",
+    page_icon="🌤️",
+    layout="wide"
+)
 
 # Custom CSS to style the weather data container
 st.markdown("""
@@ -185,7 +189,7 @@ if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 
 # User input
-user_input = st.chat_input("Tanyakan tentang cuaca atau mulai percakapan umum")
+user_input = st.chat_input("Tanyakan tentang cuaca...")
 
 if user_input:
     # Check if it's a weather query
