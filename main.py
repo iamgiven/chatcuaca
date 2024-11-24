@@ -212,7 +212,7 @@ if user_input:
         responses = {}
         
         for model_type, display_name in [
-            ("mistral", "Mistral Large Latest"),
+            ("mistral", "Mistral Large"),
             ("gemini", "Gemini 1.5 Flash"),
             ("llama", "Llama 3.1 70B")
         ]:
@@ -240,7 +240,7 @@ for chat in st.session_state.chat_history:
             st.code(chat["weather_data"])
     
     # Model responses in tabs
-    tabs = st.tabs(["Mistral Large Latest", "Gemini 1.5 Flash", "Llama 3.1 70B"])
+    tabs = st.tabs(["Mistral Large", "Gemini 1.5 Flash", "Llama 3.1 70B"])
     for tab, (model, response) in zip(tabs, chat["responses"].items()):
         with tab:
             st.markdown(response)
@@ -257,10 +257,10 @@ with st.sidebar:
 
     🌍  Mendukung bahasa Indonesia
 
-    🤖  Analisis dari 3 model AI berbeda
-        - Gemma 9B (via Groq)
-        - Gemini 1.5 Pro (via Google AI)
-        - Claude 3 Haiku (via OpenRouter)
+    🤖  Analisis dari 3 model AI berbeda:
+    - Mistral Large (via Mistral)
+    - Gemini 1.5 Flash (via Google AI)
+    - Llama 3.1 70B (via Groq)
 
     💬  Dapat melakukan percakapan umum
     
