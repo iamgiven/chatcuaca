@@ -9,6 +9,12 @@
 
 ![ChatCuaca Demo](https://via.placeholder.com/800x400?text=ChatCuaca+Demo)
 
+<div align="center">
+  <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/portrait_1.png" width="32.5%" />
+  <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/portrait_2.png" width="32.5%" />
+  <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/portrait_3.png" width="32.5%" />
+</div>
+
 ## ✨ Apa aja sih fiturnya?
 
 - 🌡️ **Prediksi Cuaca 5 Hari**: Update tiap 3 jam, lengkap dan detail
