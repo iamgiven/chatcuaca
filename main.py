@@ -169,7 +169,7 @@ Gunakan bahasa Indonesia yang sopan dan informal. Anda adalah asisten AI yang da
 
 # Streamlit UI
 st.set_page_config(
-    page_title="WeatherChat",
+    page_title="ChatCuaca",
     page_icon="🌤️",
     layout="wide"
 )
@@ -184,7 +184,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🌤️ WeatherChat")
+st.title("🌤️ ChatCuaca")
 
 # Initialize session state for chat history
 if 'chat_history' not in st.session_state:
