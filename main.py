@@ -157,7 +157,7 @@ Gunakan bahasa Indonesia yang sopan dan informal. Anda adalah asisten AI yang da
         
         elif model_type == "llama":
             completion = groq_client.chat.completions.create(
-                model="llama-3.1-70b-versatile",
+                model="llama-3.2-90b-vision-preview",
                 messages=[{"role": "user", "content": final_prompt}],
                 temperature=0.7,
                 max_tokens=500
@@ -216,7 +216,7 @@ if user_input:
         for model_type, display_name in [
             ("mistral", "Mistral Large"),
             ("gemini", "Gemini 1.5 Flash"),
-            ("llama", "Llama 3.1 70B")
+            ("llama", "Llama 3.2 90B")
         ]:
             responses[display_name] = get_model_response(
                 None, model_type, user_input, weather_data
@@ -242,7 +242,7 @@ for chat in st.session_state.chat_history:
             st.code(chat["weather_data"])
     
     # Model responses in tabs
-    tabs = st.tabs(["Mistral Large", "Gemini 1.5 Flash", "Llama 3.1 70B"])
+    tabs = st.tabs(["Mistral Large", "Gemini 1.5 Flash", "Llama 3.2 90B"])
     for tab, (model, response) in zip(tabs, chat["responses"].items()):
         with tab:
             st.markdown(response)
@@ -262,7 +262,7 @@ with st.sidebar:
     🤖  Analisis dari 3 model AI berbeda:
     - Mistral Large (via Mistral)
     - Gemini 1.5 Flash (via Google AI)
-    - Llama 3.1 70B (via Groq)
+    - Llama 3.2 90B (via Groq)
 
     💬  Dapat melakukan percakapan umum
     
