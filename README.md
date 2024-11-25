@@ -7,8 +7,6 @@
 
 > Asisten cuaca pintar yang bisa ngobrol santai dalam bahasa Indonesia, didukung beberapa model AI canggih dan data cuaca akurat.
 
-![ChatCuaca Demo](https://via.placeholder.com/800x400?text=ChatCuaca+Demo)
-
 <div align="center">
   <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/portrait_1.png" width="32.5%" />
   <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/portrait_2.png" width="32.5%" />
