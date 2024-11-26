@@ -27,7 +27,9 @@ class UI:
             Asisten ini dapat memberikan informasi cuaca dan bercakap-cakap umum dengan fitur:
             
             ✨  Prakiraan cuaca hingga 5 hari ke depan
+
             🎯  Informasi detail per 3 jam
+            
             🌍  Menggunakan bahasa Indonesia
             
             🤖  Analisis dari 3 model AI berbeda:
