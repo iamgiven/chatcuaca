@@ -13,6 +13,12 @@ class UI:
                 max-height: 400px;
                 overflow-y: auto;
             }
+            .column-bordered {
+                border: 1px solid #bcbcbc;
+                padding: 10px;
+                margin: 5px;
+                border-radius: 5px;
+            }
             </style>
         """, unsafe_allow_html=True)
         
@@ -54,8 +60,12 @@ class UI:
             if "weather_data" in chat:
                 with st.expander("Data Cuaca Lengkap"):
                     st.code(chat["weather_data"])
-            
-            tabs = st.tabs(list(chat["responses"].keys()))
-            for tab, (model, response) in zip(tabs, chat["responses"].items()):
-                with tab:
-                    st.markdown(response)
+
+            # Display responses in three columns for each model, with borders
+            if "responses" in chat:
+                cols = st.columns(3)
+                model_names = ["Mistral", "Gemini", "Llama"]
+                for i, (model, response) in enumerate(chat["responses"].items()):
+                    with cols[i]:
+                        # Apply custom class for bordered columns
+                        st.markdown(f'<div class="column-bordered"><h4>{model}</h4><p>{response}</p></div>', unsafe_allow_html=True)
