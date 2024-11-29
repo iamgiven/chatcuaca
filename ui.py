@@ -19,6 +19,16 @@ class UI:
                 margin: 5px;
                 border-radius: 5px;
             }
+            @media (orientation: portrait) {
+                .stColumn {
+                    display: none;
+                }
+            }
+            @media (orientation: landscape) {
+                .stTabs {
+                    display: none;
+                }
+            }
             </style>
         """, unsafe_allow_html=True)
         
@@ -61,11 +71,14 @@ class UI:
                 with st.expander("Data Cuaca Lengkap"):
                     st.code(chat["weather_data"])
 
-            # Display responses in three columns for each model, with borders
-            if "responses" in chat:
-                cols = st.columns(3)
-                model_names = ["Mistral", "Gemini", "Llama"]
-                for i, (model, response) in enumerate(chat["responses"].items()):
-                    with cols[i]:
-                        # Apply custom class for bordered columns
-                        st.markdown(f'<div class="column-bordered"><h4>{model}</h4><p>{response}</p></div>', unsafe_allow_html=True)
+            cols = st.columns(3)
+            model_names = ["Mistral", "Gemini", "Llama"]
+            for i, (model, response) in enumerate(chat["responses"].items()):
+                with cols[i]:
+                    # Apply custom class for bordered columns
+                    st.markdown(f'<div class="column-bordered"><h4>{model}</h4><p>{response}</p></div>', unsafe_allow_html=True)
+            
+            tabs = st.tabs(list(chat["responses"].keys()))
+            for tab, (model, response) in zip(tabs, chat["responses"].items()):
+                with tab:
+                    st.markdown(response)
