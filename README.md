@@ -10,8 +10,8 @@
   <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/portrait_1.png" width="32.5%" />
   <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/portrait_2.png" width="32.5%" />
   <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/portrait_3.png" width="32.5%" />
-  <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/landscape_1.png" width="48.75%" />
-  <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/landscape_2.png" width="48.75%" />
+  <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/landscape_1.png" width="97.5%" />
+  <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/landscape_2.png" width="97.5%" />
 </div>
 
 ## ✨ Apa aja sih fiturnya?
