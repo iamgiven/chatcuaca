@@ -3,7 +3,6 @@
 [![Python](https://img.shields.io/badge/python-v3.9+-blue.svg)](https://www.python.org)
 [![Streamlit](https://img.shields.io/badge/streamlit-v1.31+-red.svg)](https://streamlit.io)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > Asisten cuaca pintar yang bisa ngobrol santai dalam bahasa Indonesia, didukung beberapa model AI canggih dan data cuaca akurat.
 
@@ -11,6 +10,8 @@
   <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/portrait_1.png" width="32.5%" />
   <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/portrait_2.png" width="32.5%" />
   <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/portrait_3.png" width="32.5%" />
+  <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/landscape_1.png" width="48.75%" />
+  <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/landscape_2.png" width="48.75%" />
 </div>
 
 ## ✨ Apa aja sih fiturnya?
