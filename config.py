@@ -43,14 +43,24 @@ Examples:
 """
 
 CITY_EXTRACTION_PROMPT = """
-From this weather query: "{prompt}"
-Extract only the city name and return it as a single word.
-Do not include any other text or punctuation.
-Example 1: "What's the weather like in New York tomorrow?" → "new%20york"
-Example 2: "Bagaimana cuaca di Yogyakarta?" → "yogyakarta"
-Example 3: "berikan cuaca untuk kota sleman, pada tanggal 20 november 2024 jam 20:00" → "sleman"
-Translate any city name in english standard
-Example 4: "Seperti apa cuaca di Swedia besok malam?" → "Sweden"
+Ekstrak nama kota dari query cuaca berikut: "{prompt}"
+
+Tugas:
+1. Identifikasi nama kota yang disebutkan dalam query.
+2. Jika nama kota terdiri dari lebih dari satu kata, gabungkan menjadi satu kata dengan pemisah spasi diganti menjadi '%20'.
+3. Jika nama kota memiliki nama alternatif atau singkatan umum, gunakan nama yang paling umum digunakan dalam konteks perkiraan cuaca. Contoh: "Jogja" menjadi "yogyakarta", "NY" menjadi "new%20york".
+4. Jika query tidak menyebutkan kota secara eksplisit, coba tebak berdasarkan konteks geografis yang mungkin. Jika tidak memungkinkan, kembalikan "lokasi%20tidak%20diketahui".
+5. Kembalikan HANYA nama kota yang diekstrak sebagai satu kata tunggal tanpa tambahan teks atau tanda baca.
+
+Contoh:
+*   "What's the weather like in New York tomorrow?" → "new%20york"
+*   "Bagaimana cuaca di Jogja?" → "yogyakarta"
+*   "berikan cuaca untuk kota sleman, pada tanggal 20 november 2024 jam 20:00" → "sleman"
+*   "Seperti apa cuaca di Swedia besok malam?" → "sweden"
+*   "Cuaca hari ini?" (dengan asumsi pengguna berada di Jakarta) → "jakarta"
+*   "Bagaimana cuacanya?" (tanpa konteks lokasi) → "lokasi%20tidak%20diketahui"
+*   "Cuaca di London, UK?" → "london"
+*   "Perkiraan cuaca untuk LA?" → "los%20angeles"
 """
 
 WEATHER_RESPONSE_PROMPT = """Berdasarkan data cuaca berikut, berikan respons yang natural dan informatif untuk pertanyaan pengguna: "{prompt}"
