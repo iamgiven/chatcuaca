@@ -34,11 +34,22 @@ class UI:
     def display_sidebar():
         """Display sidebar information"""
         with st.sidebar:
+            # Tambahkan toggle untuk API OpenWeatherMap
+            if 'use_weather_api' not in st.session_state:
+                st.session_state.use_weather_api = True
+            
+            st.session_state.use_weather_api = st.toggle(
+                "OpenWeatherMap API",
+                value=st.session_state.use_weather_api,
+                help="Matikan untuk melihat respons model tanpa data cuaca real-time"
+            )
+            
             st.markdown("""
             ### Tentang Asisten Cuaca
             Asisten ini dapat memberikan informasi cuaca dan bercakap-cakap umum dengan fitur:
            
             ✨  Prakiraan cuaca hingga 5 hari ke depan
+
             🎯  Informasi detail per 3 jam
            
             🌍  Menggunakan bahasa Indonesia

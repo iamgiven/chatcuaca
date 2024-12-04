@@ -83,20 +83,18 @@ async def main():
     user_input = st.chat_input("Tanyakan tentang cuaca...")
     
     if user_input:
-        # Add user message to history
         st.session_state.message_history.append({
             "role": "user",
             "content": user_input
         })
 
-        # Get context before each model call
         context = AppHelper.format_chat_context()
 
         with st.spinner("Memahami pertanyaan Anda..."):
             is_weather = await helper.is_weather_query(model_manager, user_input)
         
         weather_data = None
-        if is_weather:
+        if is_weather and st.session_state.use_weather_api:  # Tambahkan pengecekan use_weather_api
             city = await helper.extract_city_from_prompt(model_manager, user_input)
             if city and city != "lokasi%20tidak%20diketahui":
                 with st.spinner(f"Mengambil data cuaca untuk {city}..."):
@@ -111,12 +109,14 @@ async def main():
         if weather_data:
             UI.display_weather_data(weather_service.format_weather_data(weather_data, user_input))
 
-        # Prepare full prompt with context
+        # Prepare full prompt with context and API status
         context = AppHelper.format_chat_context()
+        api_status_info = "" if st.session_state.use_weather_api else "\n[API OpenWeatherMap tidak digunakan. Berikan respons umum berdasarkan pengetahuan yang dimiliki.]"
+        
         prompt_template = WEATHER_RESPONSE_PROMPT if weather_data else GENERAL_CONVERSATION_PROMPT
         full_prompt = prompt_template.format(
             context=context,
-            prompt=user_input,
+            prompt=user_input + api_status_info,
             weather_info=weather_service.format_weather_data(weather_data, user_input) if weather_data else ""
         )
 
