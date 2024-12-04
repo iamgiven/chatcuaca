@@ -1,3 +1,4 @@
+# config.py
 import streamlit as st
 
 # Model configurations loaded from secrets.toml
@@ -33,42 +34,62 @@ PAGE_CONFIG = {
 
 # Prompt templates
 WEATHER_ANALYSIS_PROMPT = """
-Analyze if this query is asking about weather: "{prompt}"
+Previous conversation:
+{context}
+
+Current query: "{prompt}"
+
+Analyze if this query is asking about weather information.
+Consider references like "disana", "disitu", "di kota itu" as weather queries if they refer to previously mentioned locations.
 Return only "yes" or "no".
+
 Examples:
 "What's the weather like in New York?" → "yes"
+"Where is Tokyo?" → "no"
+"Seperti apa cuaca disana?" (after discussing about Paris) → "yes"
+"Cuaca di kota itu bagaimana?" (after mentioning London) → "yes"
 "Hi" → "no"
 "How are you?" → "no"
-"Will it rain in Jakarta tomorrow?" → "yes"
 """
 
 CITY_EXTRACTION_PROMPT = """
-Ekstrak nama kota dari query cuaca berikut: "{prompt}"
+Previous conversation:
+{context}
 
-Tugas:
-1. Identifikasi nama kota yang disebutkan dalam query.
-2. Jika nama kota terdiri dari lebih dari satu kata, gabungkan menjadi satu kata dengan pemisah spasi diganti menjadi '%20'.
-3. Jika nama kota memiliki nama alternatif atau singkatan umum, gunakan nama yang paling umum digunakan dalam konteks perkiraan cuaca. Contoh: "Jogja" menjadi "yogyakarta", "NY" menjadi "new%20york".
-4. Jika query tidak menyebutkan kota secara eksplisit, coba tebak berdasarkan konteks geografis yang mungkin. Jika tidak memungkinkan, kembalikan "lokasi%20tidak%20diketahui".
-5. Kembalikan HANYA nama kota yang diekstrak sebagai satu kata tunggal tanpa tambahan teks atau tanda baca.
+Current query: "{prompt}"
 
-Contoh:
-*   "What's the weather like in New York tomorrow?" → "new%20york"
-*   "Bagaimana cuaca di Jogja?" → "yogyakarta"
-*   "berikan cuaca untuk kota sleman, pada tanggal 20 november 2024 jam 20:00" → "sleman"
-*   "Seperti apa cuaca di Swedia besok malam?" → "sweden"
-*   "Cuaca hari ini?" (dengan asumsi pengguna berada di Jakarta) → "jakarta"
-*   "Bagaimana cuacanya?" (tanpa konteks lokasi) → "lokasi%20tidak%20diketahui"
-*   "Cuaca di London, UK?" → "london"
-*   "Perkiraan cuaca untuk LA?" → "los%20angeles"
+Extract the city name being discussed. Consider:
+1. If the query uses words like "disana", "disitu", "di kota itu", extract the last mentioned city from the conversation
+2. If a new city is mentioned explicitly, use that instead
+3. Return "lokasi%20tidak%20diketahui" if no city can be determined
+4. Convert multi-word city names using '%20' (e.g., "new york" → "new%20york")
+5. Use common names for aliases (e.g., "jogja" → "yogyakarta")
+
+Return ONLY the city name without any additional text.
 """
 
-WEATHER_RESPONSE_PROMPT = """Berdasarkan data cuaca berikut, berikan respons yang natural dan informatif untuk pertanyaan pengguna: "{prompt}"
+WEATHER_RESPONSE_PROMPT = """
+Previous conversation:
+{context}
+
+Current query: "{prompt}"
+
+Berdasarkan data cuaca berikut, berikan respons yang natural dan informatif:
 
 {weather_info}
 
-Pahami dengan teliti apa yang ditanyakan user. Jika tanggal yang ditanyakan tidak ada di dalam data, sampaikan saja tidak tahu. Berikan analisis singkat tentang kondisi cuaca dan saran yang relevan berdasarkan data tersebut. Gunakan bahasa yang ramah dan mudah dipahami."""
+Pahami dengan teliti apa yang ditanyakan user. Jika tanggal yang ditanyakan tidak ada di dalam data, sampaikan saja tidak tahu. 
+Berikan analisis singkat tentang kondisi cuaca dan saran yang relevan berdasarkan data tersebut. 
+Gunakan bahasa yang ramah dan mudah dipahami.
+"""
 
-GENERAL_CONVERSATION_PROMPT = """Berikan respons yang ramah dan natural untuk pesan pengguna: "{prompt}"
+GENERAL_CONVERSATION_PROMPT = """
+Previous conversation:
+{context}
 
-Gunakan bahasa Indonesia yang sopan dan informal. Anda adalah asisten AI yang dapat memberikan informasi cuaca, tetapi juga bisa bercakap-cakap tentang topik umum."""
+Current query: "{prompt}"
+
+Berikan respons yang ramah dan natural untuk pesan pengguna di atas.
+Gunakan bahasa Indonesia yang sopan dan informal. 
+Anda adalah asisten AI yang dapat memberikan informasi cuaca, tetapi juga bisa bercakap-cakap tentang topik umum.
+"""

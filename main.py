@@ -16,13 +16,32 @@ class AppHelper:
                 st.stop()
 
     @staticmethod
+    def initialize_session_state():
+        """Initialize session state variables"""
+        if 'chat_history' not in st.session_state:
+            st.session_state.chat_history = []
+        if 'message_history' not in st.session_state:
+            st.session_state.message_history = []
+
+    @staticmethod
+    def format_chat_context():
+        """Format message history for model context"""
+        formatted_history = ""
+        for msg in st.session_state.message_history[-5:]:  # Ambil 5 pesan terakhir saja
+            role = "Assistant" if msg["role"] == "assistant" else "Human"
+            formatted_history += f"{role}: {msg['content']}\n"
+        return formatted_history.strip()
+
+    @staticmethod
     async def is_weather_query(model_manager, prompt):
         """Determine if prompt is asking about weather"""
+        context = AppHelper.format_chat_context()
+        formatted_prompt = WEATHER_ANALYSIS_PROMPT.format(
+            context=context,
+            prompt=prompt
+        )
         try:
-            response = await model_manager.get_single_response(
-                "gemini",
-                WEATHER_ANALYSIS_PROMPT.format(prompt=prompt)
-            )
+            response = await model_manager.get_single_response("gemini", formatted_prompt)
             return response.strip().lower() == "yes"
         except Exception as e:
             st.error("Error analyzing query type. Treating as general conversation.")
@@ -30,23 +49,24 @@ class AppHelper:
 
     @staticmethod
     async def extract_city_from_prompt(model_manager, prompt):
-        """Extract city name from weather query"""
+        """Extract city name from weather query with chat history context"""
+        context = AppHelper.format_chat_context()
+        formatted_prompt = CITY_EXTRACTION_PROMPT.format(
+            context=context,
+            prompt=prompt
+        )
         try:
-            response = await model_manager.get_single_response(
-                "gemini",
-                CITY_EXTRACTION_PROMPT.format(prompt=prompt)
-            )
-            return response.strip().lower().replace(" ", "")
+            response = await model_manager.get_single_response("gemini", formatted_prompt)
+            return response.strip().lower()
         except Exception as e:
-            st.error("Tidak dapat memahami nama kota. Mohon coba lagi dengan nama kota yang valid.")
+            st.error("Error extracting city. Please try again with a valid city name.")
             return None
 
 async def main():
-    # Initialize helper
+    # Initialize helper and session state
     helper = AppHelper()
-    
-    # Check for required API keys
     helper.check_required_keys()
+    helper.initialize_session_state()
     
     # Initialize services
     model_manager = ModelManager()
@@ -56,10 +76,6 @@ async def main():
     UI.setup()
     UI.display_sidebar()
     
-    # Initialize session state
-    if 'chat_history' not in st.session_state:
-        st.session_state.chat_history = []
-    
     # Display chat history
     UI.display_chat_history(st.session_state.chat_history)
     
@@ -67,13 +83,22 @@ async def main():
     user_input = st.chat_input("Tanyakan tentang cuaca...")
     
     if user_input:
+        # Add user message to history
+        st.session_state.message_history.append({
+            "role": "user",
+            "content": user_input
+        })
+
+        # Get context before each model call
+        context = AppHelper.format_chat_context()
+
         with st.spinner("Memahami pertanyaan Anda..."):
             is_weather = await helper.is_weather_query(model_manager, user_input)
         
         weather_data = None
         if is_weather:
             city = await helper.extract_city_from_prompt(model_manager, user_input)
-            if city:
+            if city and city != "lokasi%20tidak%20diketahui":
                 with st.spinner(f"Mengambil data cuaca untuk {city}..."):
                     weather_data = weather_service.get_weather_data(city)
                     if not weather_data:
@@ -86,8 +111,11 @@ async def main():
         if weather_data:
             UI.display_weather_data(weather_service.format_weather_data(weather_data, user_input))
 
-        # Prepare prompt
-        prompt = (WEATHER_RESPONSE_PROMPT if weather_data else GENERAL_CONVERSATION_PROMPT).format(
+        # Prepare full prompt with context
+        context = AppHelper.format_chat_context()
+        prompt_template = WEATHER_RESPONSE_PROMPT if weather_data else GENERAL_CONVERSATION_PROMPT
+        full_prompt = prompt_template.format(
+            context=context,
             prompt=user_input,
             weather_info=weather_service.format_weather_data(weather_data, user_input) if weather_data else ""
         )
@@ -99,7 +127,7 @@ async def main():
         # Get streaming responses
         streams = await model_manager.get_streaming_responses(
             list(MODELS.keys()),
-            prompt,
+            full_prompt,
             weather_data
         )
 
@@ -118,6 +146,12 @@ async def main():
             for model_type, stream in streams.items()
         ]
         await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Add assistant response to message history
+        st.session_state.message_history.append({
+            "role": "assistant",
+            "content": responses["mistral"]
+        })
 
         # Store in chat history
         chat_entry = {
