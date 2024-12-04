@@ -22,8 +22,12 @@ class WeatherService:
             return "Data cuaca tidak tersedia"
         
         try:
+            # Mengambil nama kota dan negara dari respons API
             city_name = weather_data['city']['name']
-            output = f"Data Cuaca untuk {city_name}:\n\n"
+            country_code = weather_data['city']['country']
+            query = f"{city_name}, {country_code}"  # Format: "Jakarta, ID"
+            
+            output = f"Data Cuaca untuk {query}:\n\n"
             
             current_date = datetime.now().date()
             forecasts_by_date = {}

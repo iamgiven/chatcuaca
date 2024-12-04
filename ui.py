@@ -1,5 +1,6 @@
+# ui.py
 import streamlit as st
-from config import PAGE_CONFIG
+from config import PAGE_CONFIG, MODELS
 
 class UI:
     @staticmethod
@@ -24,10 +25,11 @@ class UI:
                 }
             }
             </style>
+
         """, unsafe_allow_html=True)
        
         st.title("🌤️ ChatCuaca")
-   
+
     @staticmethod
     def display_sidebar():
         """Display sidebar information"""
@@ -53,28 +55,57 @@ class UI:
             - "Prakiraan cuaca Yogyakarta besok"
             - "Cuaca Surabaya 3 hari ke depan"
             """)
-   
+
+    @staticmethod
+    def display_weather_data(weather_data):
+        """Display weather data in an expander"""
+        with st.expander("Data Cuaca Lengkap"):
+            st.code(weather_data)
+
+    @staticmethod
+    def display_responses(responses):
+        """Display model responses in both column and tab format"""
+        # Column layout for landscape
+        cols = st.columns(3)
+        for i, (model_type, response) in enumerate(responses.items()):
+            with cols[i]:
+                with st.container(border=True):
+                    st.subheader(MODELS[model_type]["display_name"])
+                    st.markdown(response)
+        
+        # Tab layout for portrait
+        tabs = st.tabs([MODELS[model]["display_name"] for model in responses.keys()])
+        for tab, (model_type, response) in zip(tabs, responses.items()):
+            with tab:
+                st.markdown(response)
+
     @staticmethod
     def display_chat_history(chat_history):
-        """Display chat history with responses"""
+        """Display full chat history"""
         for chat in chat_history:
             st.chat_message("user").write(chat["user_input"])
-           
-            if "weather_data" in chat:
-                with st.expander("Data Cuaca Lengkap"):
-                    st.code(chat["weather_data"])
             
-            # Use Streamlit's column border and background options
-            cols = st.columns(3)
-            model_names = ["Mistral", "Gemini", "Llama"]
-            for i, (model, response) in enumerate(chat["responses"].items()):
-                with cols[i]:
-                    # Use st.container() with border and background
-                    with st.container(border=True):
-                        st.subheader(model)
-                        st.write(response)
-           
-            tabs = st.tabs(list(chat["responses"].keys()))
-            for tab, (model, response) in zip(tabs, chat["responses"].items()):
-                with tab:
-                    st.markdown(response)
+            if "weather_data" in chat:
+                UI.display_weather_data(chat["weather_data"])
+            
+            UI.display_responses(chat["responses"])
+
+    @staticmethod
+    def create_response_containers():
+        """Create and return containers for streaming responses"""
+        cols = st.columns(3)
+        response_containers = {}
+        
+        for i, model_type in enumerate(MODELS.keys()):
+            with cols[i]:
+                with st.container(border=True):
+                    st.subheader(MODELS[model_type]["display_name"])
+                    response_containers[model_type] = st.empty()
+        
+        tabs = st.tabs([MODELS[model]["display_name"] for model in MODELS])
+        tab_containers = {}
+        for model_type, tab in zip(MODELS.keys(), tabs):
+            with tab:
+                tab_containers[model_type] = st.empty()
+                
+        return response_containers, tab_containers

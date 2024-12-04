@@ -7,3 +7,5 @@ python-dotenv
 python-dateutil
 pytz
 mistralai
+aiohttp
+asyncio
