@@ -7,6 +7,7 @@ class UI:
         """Initialize Streamlit UI configuration"""
         st.set_page_config(**PAGE_CONFIG)
        
+        # Tambahkan custom CSS sebelum konten apapun
         st.markdown("""
             <style>
             .stCode {
@@ -24,10 +25,10 @@ class UI:
                 }
             }
             </style>
-
         """, unsafe_allow_html=True)
-       
-        st.title("🌤️ ChatCuaca")
+        
+        # Gunakan markdown untuk judul dengan padding custom
+        st.markdown("<h1 style='padding-top: 0rem; margin-top: -2.5rem;'>🌤️ ChatCuaca</h1>", unsafe_allow_html=True)
 
     @staticmethod
     def display_sidebar():
