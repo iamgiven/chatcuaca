@@ -1,4 +1,3 @@
-# config.py
 import streamlit as st
 
 # Model configurations loaded from secrets.toml

@@ -14,18 +14,6 @@
   <img src="https://raw.githubusercontent.com/iamgiven/chatcuaca/master/images/landscape_2.png" width="97.5%" />
 </div>
 
-## ✨ Apa aja sih fiturnya?
-
-- 🌡️ **Prediksi Cuaca 5 Hari**: Update tiap 3 jam, lengkap dan detail
-- 🤖 **3 Model AI Sekaligus**: 
-  - Mistral Large
-  - Gemini 1.5 Flash
-  - Llama 3.2 90B
-- 🗣️ **Ngobrol Santai**: Gak cuma soal cuaca, bisa ngobrol macam-macam
-- 🇮🇩 **Full Bahasa Indonesia**: Nyaman digunakan
-- 📊 **Info Cuaca Lengkap**: Suhu, kelembaban, kecepatan angin, dll
-- 📱 **Responsif**: Bisa dibuka di HP atau laptop, tetep nyaman
-
 ## 🚀 Cara Pakai
 
 ### Yang Harus Disiapkan
@@ -131,7 +119,7 @@ Kamu perlu daftar dulu buat dapetin API key dari:
    ```
 3. Commit perubahan kamu
    ```bash
-   git commit -m 'Nambahin fitur keren'
+   git commit -m 'Tambah fitur..'
    ```
 4. Push ke branch
    ```bash

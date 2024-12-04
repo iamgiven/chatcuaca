@@ -1,4 +1,3 @@
-# ui.py
 import streamlit as st
 from config import PAGE_CONFIG, MODELS
 
