@@ -83,12 +83,6 @@ async def process_batch(model_manager, prompt, weather_data, tab_containers, is_
     await asyncio.gather(*tasks)
     return responses
 
-async def wait_with_spinner():
-    """Display spinner while waiting for first batch to complete"""
-    with st.spinner("Sedang memproses respons tanpa data API..."):
-        while True:
-            await asyncio.sleep(0.1)
-
 async def main():
     # Initialize helper and session state
     helper = AppHelper()
@@ -116,19 +110,16 @@ async def main():
         })
 
         context = AppHelper.format_chat_context()
-
-        with st.spinner("Memahami pertanyaan Anda..."):
-            is_weather = await helper.is_weather_query(model_manager, user_input)
+        is_weather = await helper.is_weather_query(model_manager, user_input)
 
         weather_data = None
         if is_weather:
             city = await helper.extract_city_from_prompt(model_manager, user_input)
             if city and city != "lokasi%20tidak%20diketahui":
-                with st.spinner(f"Mengambil data cuaca untuk {city}..."):
-                    weather_data = weather_service.get_weather_data(city)
-                    if not weather_data:
-                        st.error(f"Tidak dapat mengambil data cuaca untuk {city}. Mohon periksa nama kota dan coba lagi.")
-                        st.stop()
+                weather_data = weather_service.get_weather_data(city)
+                if not weather_data:
+                    st.error(f"Tidak dapat mengambil data cuaca untuk {city}. Mohon periksa nama kota dan coba lagi.")
+                    st.stop()
 
         # Display user message
         st.chat_message("user").write(user_input)
@@ -159,9 +150,6 @@ async def main():
         # Create containers for streaming responses
         tab_containers = UI.create_response_containers()
 
-        # Create a spinner task for batch 2 that will start running while batch 1 processes
-        spinner_task = asyncio.create_task(wait_with_spinner())
-
         # Process first batch (with API) - all models in parallel
         responses_with_api = await process_batch(
             model_manager, 
@@ -171,9 +159,6 @@ async def main():
             is_api_batch=True
         )
 
-        # Cancel spinner before starting batch 2
-        spinner_task.cancel()
-        
         # Process second batch (without API) - all models in parallel
         responses_without_api = await process_batch(
             model_manager, 
