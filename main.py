@@ -93,7 +93,7 @@ async def main():
             is_weather = await helper.is_weather_query(model_manager, user_input)
         
         weather_data = None
-        if is_weather and st.session_state.use_weather_api:  # Tambahkan pengecekan use_weather_api
+        if is_weather:
             city = await helper.extract_city_from_prompt(model_manager, user_input)
             if city and city != "lokasi%20tidak%20diketahui":
                 with st.spinner(f"Mengambil data cuaca untuk {city}..."):
@@ -108,58 +108,84 @@ async def main():
         if weather_data:
             UI.display_weather_data(weather_service.format_weather_data(weather_data, user_input))
 
-        # Prepare full prompt with context and API status
+        # Prepare prompts for both API and non-API responses
         context = AppHelper.format_chat_context()
-        api_status_info = "" if st.session_state.use_weather_api else "\n[API OpenWeatherMap tidak digunakan. Berikan respons umum berdasarkan pengetahuan yang dimiliki.]"
         
-        prompt_template = WEATHER_RESPONSE_PROMPT if weather_data else GENERAL_CONVERSATION_PROMPT
-        full_prompt = prompt_template.format(
+        # Prompt with API data
+        prompt_with_api = WEATHER_RESPONSE_PROMPT.format(
             context=context,
-            prompt=user_input + api_status_info,
+            prompt=user_input,
             weather_info=weather_service.format_weather_data(weather_data, user_input) if weather_data else ""
+        )
+        
+        # Prompt without API data
+        prompt_without_api = WEATHER_RESPONSE_PROMPT.format(
+            context=context,
+            prompt=user_input + "\n[API OpenWeatherMap tidak digunakan. Berikan respons umum berdasarkan pengetahuan yang dimiliki.]",
+            weather_info=""
+        ) if is_weather else GENERAL_CONVERSATION_PROMPT.format(
+            context=context,
+            prompt=user_input
         )
 
         # Create containers for streaming responses
-        response_containers, tab_containers = UI.create_response_containers()
-        responses = {model: "" for model in MODELS.keys()}
+        tab_containers = UI.create_response_containers()
+        
+        # Initialize response dictionaries
+        responses_with_api = {model: "" for model in MODELS.keys()}
+        responses_without_api = {model: "" for model in MODELS.keys()}
 
-        # Get streaming responses
-        streams = await model_manager.get_streaming_responses(
+        # Get streaming responses for both scenarios
+        streams_with_api = await model_manager.get_streaming_responses(
             list(MODELS.keys()),
-            full_prompt,
+            prompt_with_api,
             weather_data
+        )
+        
+        streams_without_api = await model_manager.get_streaming_responses(
+            list(MODELS.keys()),
+            prompt_without_api,
+            None
         )
 
         # Process streams
-        async def process_stream(model_type: str, stream) -> None:
+        async def process_stream(model_type: str, stream, is_api: bool):
+            responses_dict = responses_with_api if is_api else responses_without_api
+            container_key = f"{model_type}_api" if is_api else f"{model_type}_no_api"
+            
             async for chunk in stream:
                 if chunk:
-                    responses[model_type] += chunk
+                    responses_dict[model_type] += chunk
                     await asyncio.sleep(0)
-                    response_containers[model_type].markdown(responses[model_type])
-                    tab_containers[model_type].markdown(responses[model_type])
+                    tab_containers[container_key].markdown(responses_dict[model_type])
 
-        # Run all tasks concurrently
-        tasks = [
-            asyncio.create_task(process_stream(model_type, stream))
-            for model_type, stream in streams.items()
-        ]
+        # Create tasks for all streams
+        tasks = []
+        for model_type in MODELS.keys():
+            tasks.append(asyncio.create_task(
+                process_stream(model_type, streams_with_api[model_type], True)
+            ))
+            tasks.append(asyncio.create_task(
+                process_stream(model_type, streams_without_api[model_type], False)
+            ))
+        
         await asyncio.gather(*tasks, return_exceptions=True)
-
-        # Add assistant response to message history
-        st.session_state.message_history.append({
-            "role": "assistant",
-            "content": responses["mistral"]
-        })
 
         # Store in chat history
         chat_entry = {
             "user_input": user_input,
-            "responses": responses.copy()
+            "responses_with_api": responses_with_api.copy(),
+            "responses_without_api": responses_without_api.copy()
         }
         if weather_data:
             chat_entry["weather_data"] = weather_service.format_weather_data(weather_data, user_input)
         st.session_state.chat_history.append(chat_entry)
+
+        # Add assistant response to message history (using API response as default)
+        st.session_state.message_history.append({
+            "role": "assistant",
+            "content": responses_with_api["mistral"]
+        })
 
 if __name__ == "__main__":
     asyncio.run(main())
