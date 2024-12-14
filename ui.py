@@ -55,7 +55,7 @@ class UI:
     def display_responses(responses_with_api, responses_without_api):
         """Display model responses in nested tabs format"""
         # Create parent tabs
-        parent_tabs = st.tabs(["Dengan OpenWeatherMap API", "Tanpa OpenWeatherMap API"])
+        parent_tabs = st.tabs(["OpenWeatherMap API", "Tanpa OpenWeatherMap API"])
         
         # Tab with API
         with parent_tabs[0]:
