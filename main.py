@@ -83,6 +83,12 @@ async def process_batch(model_manager, prompt, weather_data, tab_containers, is_
     await asyncio.gather(*tasks)
     return responses
 
+async def wait_with_spinner():
+    """Display spinner while waiting for first batch to complete"""
+    with st.spinner("Sedang memproses respons tanpa data API..."):
+        while True:
+            await asyncio.sleep(0.1)
+
 async def main():
     # Initialize helper and session state
     helper = AppHelper()
@@ -153,25 +159,29 @@ async def main():
         # Create containers for streaming responses
         tab_containers = UI.create_response_containers()
 
-        # Process first batch (with API) - all models in parallel
-        with st.spinner("Mendapatkan respons dengan data API..."):
-            responses_with_api = await process_batch(
-                model_manager, 
-                prompt_with_api, 
-                weather_data, 
-                tab_containers, 
-                is_api_batch=True
-            )
+        # Create a spinner task for batch 2 that will start running while batch 1 processes
+        spinner_task = asyncio.create_task(wait_with_spinner())
 
+        # Process first batch (with API) - all models in parallel
+        responses_with_api = await process_batch(
+            model_manager, 
+            prompt_with_api, 
+            weather_data, 
+            tab_containers, 
+            is_api_batch=True
+        )
+
+        # Cancel spinner before starting batch 2
+        spinner_task.cancel()
+        
         # Process second batch (without API) - all models in parallel
-        with st.spinner("Mendapatkan respons tanpa data API..."):
-            responses_without_api = await process_batch(
-                model_manager, 
-                prompt_without_api, 
-                None, 
-                tab_containers, 
-                is_api_batch=False
-            )
+        responses_without_api = await process_batch(
+            model_manager, 
+            prompt_without_api, 
+            None, 
+            tab_containers, 
+            is_api_batch=False
+        )
 
         # Store in chat history
         chat_entry = {
