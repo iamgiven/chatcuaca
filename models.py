@@ -10,7 +10,7 @@ from typing import AsyncGenerator, Dict
 class ModelManager:
     def __init__(self):
         self.initialize_clients()
-        
+
     def initialize_clients(self):
         """Initialize all API clients"""
         try:
@@ -44,18 +44,15 @@ class ModelManager:
                 return completion.choices[0].message.content
         except Exception as e:
             return f"Error: {str(e)}"
-    
-    async def get_streaming_responses(self, model_types: list, prompt: str, weather_data: Dict = None) -> Dict[str, AsyncGenerator]:
-        """Get streaming responses from specified models concurrently"""
-        streams = {}
-        for model_type in model_types:
-            if model_type == "mistral":
-                streams[model_type] = self._get_mistral_stream(prompt, weather_data)
-            elif model_type == "gemini":
-                streams[model_type] = self._get_gemini_stream(prompt, weather_data)
-            elif model_type == "llama":
-                streams[model_type] = self._get_llama_stream(prompt, weather_data)
-        return streams
+
+    async def get_single_model_stream(self, model_type: str, prompt: str, weather_data: Dict = None) -> AsyncGenerator[str, None]:
+        """Get streaming response from a single model"""
+        if model_type == "mistral":
+            return self._get_mistral_stream(prompt, weather_data)
+        elif model_type == "gemini":
+            return self._get_gemini_stream(prompt, weather_data)
+        elif model_type == "llama":
+            return self._get_llama_stream(prompt, weather_data)
 
     async def _get_mistral_stream(self, prompt: str, weather_data: Dict = None) -> AsyncGenerator[str, None]:
         try:
