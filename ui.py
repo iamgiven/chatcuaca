@@ -53,25 +53,23 @@ class UI:
 
     @staticmethod
     def display_responses(responses_with_api, responses_without_api):
-        """Display model responses in tabs format"""
-        tab_titles = []
-        for model in MODELS.keys():
-            tab_titles.extend([
-                f"{MODELS[model]['display_name']} (dengan API)",
-                f"{MODELS[model]['display_name']} (tanpa API)"
-            ])
+        """Display model responses in nested tabs format"""
+        # Create parent tabs
+        parent_tabs = st.tabs(["Dengan OpenWeatherMap API", "Tanpa OpenWeatherMap API"])
         
-        tabs = st.tabs(tab_titles)
+        # Tab with API
+        with parent_tabs[0]:
+            model_tabs = st.tabs([MODELS[model]["display_name"] for model in MODELS.keys()])
+            for model_tab, (model_type, response) in zip(model_tabs, responses_with_api.items()):
+                with model_tab:
+                    st.markdown(response)
         
-        # Display responses in alternating tabs (with API, without API)
-        for i, model_type in enumerate(MODELS.keys()):
-            # Tab with API
-            with tabs[i*2]:
-                st.markdown(responses_with_api[model_type])
-            
-            # Tab without API
-            with tabs[i*2 + 1]:
-                st.markdown(responses_without_api[model_type])
+        # Tab without API
+        with parent_tabs[1]:
+            model_tabs = st.tabs([MODELS[model]["display_name"] for model in MODELS.keys()])
+            for model_tab, (model_type, response) in zip(model_tabs, responses_without_api.items()):
+                with model_tab:
+                    st.markdown(response)
 
     @staticmethod
     def display_chat_history(chat_history):
@@ -89,26 +87,24 @@ class UI:
 
     @staticmethod
     def create_response_containers():
-        """Create and return containers for streaming responses"""
-        tab_titles = []
-        for model in MODELS.keys():
-            tab_titles.extend([
-                f"{MODELS[model]['display_name']} (dengan API)",
-                f"{MODELS[model]['display_name']} (tanpa API)"
-            ])
+        """Create and return containers for streaming responses in nested tabs"""
+        # Create parent tabs
+        parent_tabs = st.tabs(["OpenWeatherMap API", "Tanpa OpenWeatherMap API"])
         
-        tabs = st.tabs(tab_titles)
-        tab_containers = {
-            f"{model}_api": st.empty() for model in MODELS.keys()
-        }
-        tab_containers.update({
-            f"{model}_no_api": st.empty() for model in MODELS.keys()
-        })
+        tab_containers = {}
         
-        for i, model_type in enumerate(MODELS.keys()):
-            with tabs[i*2]:
-                tab_containers[f"{model_type}_api"] = st.empty()
-            with tabs[i*2 + 1]:
-                tab_containers[f"{model_type}_no_api"] = st.empty()
+        # Tab with API
+        with parent_tabs[0]:
+            model_tabs = st.tabs([MODELS[model]["display_name"] for model in MODELS.keys()])
+            for model_type, model_tab in zip(MODELS.keys(), model_tabs):
+                with model_tab:
+                    tab_containers[f"{model_type}_api"] = st.empty()
+        
+        # Tab without API
+        with parent_tabs[1]:
+            model_tabs = st.tabs([MODELS[model]["display_name"] for model in MODELS.keys()])
+            for model_type, model_tab in zip(MODELS.keys(), model_tabs):
+                with model_tab:
+                    tab_containers[f"{model_type}_no_api"] = st.empty()
                 
         return tab_containers
