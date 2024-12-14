@@ -61,6 +61,28 @@ class AppHelper:
             st.error("Error extracting city. Please try again with a valid city name.")
             return None
 
+async def process_batch(model_manager, prompt, weather_data, tab_containers, is_api_batch=True):
+    """Process a batch of models in parallel"""
+    responses = {model: "" for model in MODELS.keys()}
+    
+    async def process_model(model_type):
+        stream = await model_manager.get_single_model_stream(
+            model_type,
+            prompt,
+            weather_data if is_api_batch else None
+        )
+        suffix = "api" if is_api_batch else "no_api"
+        async for chunk in stream:
+            if chunk:
+                responses[model_type] += chunk
+                tab_containers[f"{model_type}_{suffix}"].markdown(responses[model_type])
+                await asyncio.sleep(0)
+    
+    # Create tasks for all models in the batch
+    tasks = [process_model(model_type) for model_type in MODELS.keys()]
+    await asyncio.gather(*tasks)
+    return responses
+
 async def main():
     # Initialize helper and session state
     helper = AppHelper()
@@ -131,37 +153,25 @@ async def main():
         # Create containers for streaming responses
         tab_containers = UI.create_response_containers()
 
-        # Initialize response dictionaries
-        responses_with_api = {model: "" for model in MODELS.keys()}
-        responses_without_api = {model: "" for model in MODELS.keys()}
-
-        # Process responses sequentially - first with API
+        # Process first batch (with API) - all models in parallel
         with st.spinner("Mendapatkan respons dengan data API..."):
-            for model_type in MODELS.keys():
-                stream = await model_manager.get_single_model_stream(
-                    model_type,
-                    prompt_with_api,
-                    weather_data
-                )
-                async for chunk in stream:
-                    if chunk:
-                        responses_with_api[model_type] += chunk
-                        tab_containers[f"{model_type}_api"].markdown(responses_with_api[model_type])
-                        await asyncio.sleep(0)
+            responses_with_api = await process_batch(
+                model_manager, 
+                prompt_with_api, 
+                weather_data, 
+                tab_containers, 
+                is_api_batch=True
+            )
 
-        # Then process responses without API
+        # Process second batch (without API) - all models in parallel
         with st.spinner("Mendapatkan respons tanpa data API..."):
-            for model_type in MODELS.keys():
-                stream = await model_manager.get_single_model_stream(
-                    model_type,
-                    prompt_without_api,
-                    None
-                )
-                async for chunk in stream:
-                    if chunk:
-                        responses_without_api[model_type] += chunk
-                        tab_containers[f"{model_type}_no_api"].markdown(responses_without_api[model_type])
-                        await asyncio.sleep(0)
+            responses_without_api = await process_batch(
+                model_manager, 
+                prompt_without_api, 
+                None, 
+                tab_containers, 
+                is_api_batch=False
+            )
 
         # Store in chat history
         chat_entry = {
