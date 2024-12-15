@@ -21,20 +21,52 @@ class AppHelper:
             st.session_state.chat_history = []
         if 'message_history' not in st.session_state:
             st.session_state.message_history = []
+        if 'message_history_no_api' not in st.session_state:
+            st.session_state.message_history_no_api = []
 
     @staticmethod
-    def format_chat_context():
+    def format_chat_context(with_api=True):
         """Format message history for model context"""
         formatted_history = ""
-        for msg in st.session_state.message_history[-5:]:  # Ambil 5 pesan terakhir saja
+        history = st.session_state.message_history if with_api else st.session_state.message_history_no_api
+        
+        for msg in history[-5:]:  # Ambil 5 pesan terakhir saja
             role = "Assistant" if msg["role"] == "assistant" else "Human"
-            formatted_history += f"{role}: {msg['content']}\n"
+            # Untuk model tanpa API, hilangkan data cuaca dari respons asisten
+            content = msg["content"]
+            if not with_api and msg["role"] == "assistant":
+                # Hapus bagian yang berisi data cuaca (misalnya suhu, kelembaban, dll)
+                content = AppHelper.remove_weather_data(content)
+            formatted_history += f"{role}: {content}\n"
         return formatted_history.strip()
+
+    @staticmethod
+    def remove_weather_data(text):
+        """Menghapus informasi cuaca spesifik dari text"""
+        # Daftar kata kunci yang menandakan adanya data cuaca
+        weather_keywords = [
+            "suhu:", "kelembaban:", "kecepatan angin:", "arah angin:",
+            "tekanan:", "cuaca:", "°C", "km/h", "hPa", "%",
+            "temperature:", "humidity:", "wind speed:", "wind direction:",
+            "pressure:", "weather:", "precipitation:", "rainfall:",
+            "forecast:", "predicted:", "akan turun", "kemungkinan hujan"
+        ]
+        
+        lines = text.split('\n')
+        filtered_lines = []
+        
+        for line in lines:
+            # Cek apakah baris mengandung data cuaca
+            contains_weather_data = any(keyword.lower() in line.lower() for keyword in weather_keywords)
+            if not contains_weather_data:
+                filtered_lines.append(line)
+        
+        return '\n'.join(filtered_lines)
 
     @staticmethod
     async def is_weather_query(model_manager, prompt):
         """Determine if prompt is asking about weather"""
-        context = AppHelper.format_chat_context()
+        context = AppHelper.format_chat_context(with_api=True)
         formatted_prompt = WEATHER_ANALYSIS_PROMPT.format(
             context=context,
             prompt=prompt
@@ -49,7 +81,7 @@ class AppHelper:
     @staticmethod
     async def extract_city_from_prompt(model_manager, prompt):
         """Extract city name from weather query with chat history context"""
-        context = AppHelper.format_chat_context()
+        context = AppHelper.format_chat_context(with_api=True)
         formatted_prompt = CITY_EXTRACTION_PROMPT.format(
             context=context,
             prompt=prompt
@@ -104,12 +136,17 @@ async def main():
     user_input = st.chat_input("Tanyakan tentang cuaca...")
 
     if user_input:
+        # Add user message to both histories
         st.session_state.message_history.append({
             "role": "user",
             "content": user_input
         })
+        st.session_state.message_history_no_api.append({
+            "role": "user",
+            "content": user_input
+        })
 
-        context = AppHelper.format_chat_context()
+        context = AppHelper.format_chat_context(with_api=True)
         is_weather = await helper.is_weather_query(model_manager, user_input)
 
         weather_data = None
@@ -128,22 +165,23 @@ async def main():
             UI.display_weather_data(weather_service.format_weather_data(weather_data, user_input))
 
         # Prepare prompts for both API and non-API responses
-        context = AppHelper.format_chat_context()
+        context_with_api = AppHelper.format_chat_context(with_api=True)
+        context_no_api = AppHelper.format_chat_context(with_api=False)
 
         # Prompt with API data
         prompt_with_api = WEATHER_RESPONSE_PROMPT.format(
-            context=context,
+            context=context_with_api,
             prompt=user_input,
             weather_info=weather_service.format_weather_data(weather_data, user_input) if weather_data else ""
         )
 
         # Prompt without API data
         prompt_without_api = WEATHER_RESPONSE_PROMPT.format(
-            context=context,
+            context=context_no_api,
             prompt=user_input + "\n[API OpenWeatherMap tidak digunakan. Berikan respons umum berdasarkan pengetahuan yang dimiliki.]",
             weather_info=""
         ) if is_weather else GENERAL_CONVERSATION_PROMPT.format(
-            context=context,
+            context=context_no_api,
             prompt=user_input
         )
 
@@ -190,10 +228,15 @@ async def main():
             chat_entry["weather_data"] = weather_service.format_weather_data(weather_data, user_input)
         st.session_state.chat_history.append(chat_entry)
 
-        # Add assistant response to message history (using API response as default)
+        # Add assistant responses to respective histories
         st.session_state.message_history.append({
             "role": "assistant",
             "content": responses_with_api["mistral"]
+        })
+        
+        st.session_state.message_history_no_api.append({
+            "role": "assistant",
+            "content": responses_without_api["mistral"]
         })
 
 if __name__ == "__main__":
