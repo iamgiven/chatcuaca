@@ -64,7 +64,7 @@ class AppHelper:
 async def process_batch(model_manager, prompt, weather_data, tab_containers, is_api_batch=True):
     """Process a batch of models in parallel"""
     responses = {model: "" for model in MODELS.keys()}
-    
+
     async def process_model(model_type):
         stream = await model_manager.get_single_model_stream(
             model_type,
@@ -77,7 +77,7 @@ async def process_batch(model_manager, prompt, weather_data, tab_containers, is_
                 responses[model_type] += chunk
                 tab_containers[f"{model_type}_{suffix}"].markdown(responses[model_type])
                 await asyncio.sleep(0)
-    
+
     # Create tasks for all models in the batch
     tasks = [process_model(model_type) for model_type in MODELS.keys()]
     await asyncio.gather(*tasks)
@@ -150,6 +150,14 @@ async def main():
         # Create containers for streaming responses
         tab_containers = UI.create_response_containers()
 
+        # Add loading spinners to no-API tabs
+        spinner_placeholders = {}
+        for model in MODELS.keys():
+            with tab_containers[f"{model}_no_api"]:
+                spinner_placeholders[model] = st.empty()
+                with spinner_placeholders[model]:
+                    st.spinner("Menunggu respons batch pertama selesai...")
+
         # Process first batch (with API) - all models in parallel
         responses_with_api = await process_batch(
             model_manager, 
@@ -158,6 +166,10 @@ async def main():
             tab_containers, 
             is_api_batch=True
         )
+
+        # Clear spinners before starting second batch
+        for model in MODELS.keys():
+            spinner_placeholders[model].empty()
 
         # Process second batch (without API) - all models in parallel
         responses_without_api = await process_batch(
