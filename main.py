@@ -150,13 +150,14 @@ async def main():
         # Create containers for streaming responses
         tab_containers = UI.create_response_containers()
 
-        # Add loading spinners to no-API tabs
-        spinner_placeholders = {}
+        # Create placeholder containers for no-API tabs with spinners
+        no_api_placeholders = {}
         for model in MODELS.keys():
-            with tab_containers[f"{model}_no_api"]:
-                spinner_placeholders[model] = st.empty()
-                with spinner_placeholders[model]:
-                    st.spinner("Menunggu respons batch pertama selesai...")
+            no_api_placeholders[model] = tab_containers[f"{model}_no_api"].empty()
+
+        # Show spinners in no-API tabs
+        for model in MODELS.keys():
+            no_api_placeholders[model].markdown("⏳ Menunggu respons batch pertama selesai...")
 
         # Process first batch (with API) - all models in parallel
         responses_with_api = await process_batch(
@@ -167,11 +168,10 @@ async def main():
             is_api_batch=True
         )
 
-        # Clear spinners before starting second batch
+        # Clear spinners and process second batch
         for model in MODELS.keys():
-            spinner_placeholders[model].empty()
+            no_api_placeholders[model].empty()
 
-        # Process second batch (without API) - all models in parallel
         responses_without_api = await process_batch(
             model_manager, 
             prompt_without_api, 
