@@ -16,8 +16,7 @@ class UI:
             .stColumn {
                 max-height: 450px;
                 overflow-y: auto;
-                margin: 0 0 40px 0;
-                border: 1px #ccc solid;
+                border: 1px #aaa solid;
                 border-radius: 10px;
                 padding: 1rem;
             }
