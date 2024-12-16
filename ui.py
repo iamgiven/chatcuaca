@@ -13,6 +13,14 @@ class UI:
                 max-height: 400px;
                 overflow-y: auto;
             }
+            .stColumn {
+                max-height: 450px;
+                overflow-y: auto;
+                margin: 0 0 40px 0;
+                border: 1px #ccc solid;
+                border-radius: 10px;
+                padding: 1rem;
+            }
             </style>
         """, unsafe_allow_html=True)
 
@@ -73,25 +81,25 @@ class UI:
             cols = st.columns(len(MODELS))
             for idx, (model_type, response) in enumerate(responses_with_api.items()):
                 with cols[idx]:
-                    with st.container(border=True):
+                    with st.container():
                         st.markdown(f"### {MODELS[model_type]['display_name']}")
                         st.markdown(response)
             
             cols = st.columns(len(MODELS))
             for idx, (model_type, response) in enumerate(responses_without_api.items()):
                 with cols[idx]:
-                    with st.container(border=True):
+                    with st.container():
                         st.markdown(f"### {MODELS[model_type]['display_name']} (Tanpa API)")
                         st.markdown(response)
         else:
             # Portrait mode: Single column layout
             for model_type, response in responses_with_api.items():
-                with st.container(border=True):
+                with st.container():
                     st.markdown(f"### {MODELS[model_type]['display_name']}")
                     st.markdown(response)
             
             for model_type, response in responses_without_api.items():
-                with st.container(border=True):
+                with st.container():
                     st.markdown(f"### {MODELS[model_type]['display_name']} (Tanpa API)")
                     st.markdown(response)
 
@@ -105,25 +113,25 @@ class UI:
             cols_api = st.columns(len(MODELS))
             for idx, model_type in enumerate(MODELS.keys()):
                 with cols_api[idx]:
-                    with st.container(border=True):
+                    with st.container():
                         st.markdown(f"### {MODELS[model_type]['display_name']}")
                         containers[f"{model_type}_api"] = st.empty()
             
             cols_no_api = st.columns(len(MODELS))
             for idx, model_type in enumerate(MODELS.keys()):
                 with cols_no_api[idx]:
-                    with st.container(border=True):
+                    with st.container():
                         st.markdown(f"### {MODELS[model_type]['display_name']} (Tanpa API)")
                         containers[f"{model_type}_no_api"] = st.empty()
         else:
             # Portrait mode: Single column layout
             for model_type in MODELS.keys():
-                with st.container(border=True):
+                with st.container():
                     st.markdown(f"### {MODELS[model_type]['display_name']}")
                     containers[f"{model_type}_api"] = st.empty()
             
             for model_type in MODELS.keys():
-                with st.container(border=True):
+                with st.container():
                     st.markdown(f"### {MODELS[model_type]['display_name']} (Tanpa API)")
                     containers[f"{model_type}_no_api"] = st.empty()
 
