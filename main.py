@@ -195,7 +195,7 @@ async def main():
 
         # Show spinners in no-API tabs
         for model in MODELS.keys():
-            no_api_placeholders[model].markdown("⏳ Menunggu respons batch pertama selesai...")
+            no_api_placeholders[model].markdown("⏳ Menunggu respon model dengan API selesai...")
 
         # Process first batch (with API) - all models in parallel
         responses_with_api = await process_batch(
